@@ -28,7 +28,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         payload = json.dumps({
             'model': 'claude-sonnet-4-6',
             'max_tokens': 8192,
-            'stream': True,
+            'stream': False,
             'system': 'You are a JSON API. Output only raw valid JSON. Never use markdown, backticks, or any text outside the JSON object. Your entire response must be a single JSON object starting with { and ending with }.',
             'messages': [{'role': 'user', 'content': prompt}],
         }).encode()
@@ -45,34 +45,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         )
 
         try:
-            with urllib.request.urlopen(req) as resp:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                data = json.loads(resp.read())
+                text = data['content'][0]['text']
+                body = text.encode('utf-8')
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/plain; charset=utf-8')
-                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Content-Length', str(len(body)))
                 self.end_headers()
-
-                buffer = b''
-                while True:
-                    chunk = resp.read(256)
-                    if not chunk:
-                        break
-                    buffer += chunk
-                    while b'\n' in buffer:
-                        line, buffer = buffer.split(b'\n', 1)
-                        line = line.decode('utf-8', errors='replace').strip()
-                        if not line.startswith('data: '):
-                            continue
-                        data = line[6:].strip()
-                        if data == '[DONE]':
-                            continue
-                        try:
-                            event = json.loads(data)
-                            if (event.get('type') == 'content_block_delta'
-                                    and event.get('delta', {}).get('type') == 'text_delta'):
-                                self.wfile.write(event['delta']['text'].encode())
-                                self.wfile.flush()
-                        except Exception:
-                            pass
+                self.wfile.write(body)
 
         except urllib.error.HTTPError as e:
             detail = e.read().decode()

@@ -46,39 +46,9 @@ export default async function handler(req) {
     );
   }
 
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
-
-  const stream = new ReadableStream({
-    async start(controller) {
-      const reader = upstream.body.getReader();
-      let buffer = '';
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop();
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') continue;
-            try {
-              const event = JSON.parse(data);
-              if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-                controller.enqueue(encoder.encode(event.delta.text));
-              }
-            } catch {}
-          }
-        }
-      } finally {
-        controller.close();
-      }
-    },
-  });
-
-  return new Response(stream, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  // Pipe the Anthropic SSE stream directly to the client.
+  // The browser parses the SSE events to extract text.
+  return new Response(upstream.body, {
+    headers: { 'Content-Type': 'text/event-stream; charset=utf-8' },
   });
 }

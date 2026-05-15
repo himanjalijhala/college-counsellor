@@ -473,10 +473,24 @@ async function generate() {
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let raw = '';
+    let sseBuffer = '';
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      raw += decoder.decode(value, { stream: true });
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split('\n');
+      sseBuffer = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const event = JSON.parse(data);
+          if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+            raw += event.delta.text;
+          }
+        } catch {}
+      }
     }
     currentResult = extractJSON(raw);
     renderResult(currentResult, currentForm);
