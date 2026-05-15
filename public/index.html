@@ -392,7 +392,7 @@ function extractJSON(raw) {
   if (jStart !== -1 && jEnd !== -1) {
     try { return JSON.parse(lines.slice(jStart, lines.length-jEnd).join('\n')); } catch {}
   }
-  throw new Error('Could not read the guide. Raw response starts with: ' + raw.slice(0, 200));
+  throw new Error('Could not read the guide. Please tap Generate again.');
 }
 
 // ── Build prompt ──────────────────────────────────────────────────────────
