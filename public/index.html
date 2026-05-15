@@ -761,5 +761,12 @@ buildCategories();
 buildChips(PERSONALITIES, 'personality-chips', selectedPersonality, makePlainToggle(selectedPersonality));
 buildChips(REGIONS, 'region-chips', selectedRegions, makePlainToggle(selectedRegions));
 </script>
+
+<!-- Vercel Web Analytics -->
+<script type="module">
+  import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1.4.1/+esm';
+  inject();
+</script>
+
 </body>
 </html>

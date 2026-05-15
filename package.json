@@ -1,0 +1,20 @@
+{
+  "name": "college-counsellor",
+  "version": "1.0.0",
+  "description": "A free, personalised college guidance tool for students — powered by Claude AI.",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build step required'"
+  },
+  "keywords": [
+    "education",
+    "college",
+    "counselling"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}
